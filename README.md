@@ -1,6 +1,10 @@
 hashring
 ============================
 
+>   Different between [serialx/hashring](https://github.com/serialx/hashring): 
+>   1. Reset commit [7706f26](https://github.com/serialx/hashring/commit/7706f26af1941a4e865d509c4681eb86c3b62bf8) which brings [issues](https://github.com/serialx/hashring/issues/17).  
+>     2. Fix that node would not be inserted to ring when its weight is too small.
+
 Implements consistent hashing that can be used when
 the number of server nodes can increase or decrease (like in memcached).
 The hashing ring is built using the same algorithm as libketama.
