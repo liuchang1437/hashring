@@ -2,8 +2,9 @@ hashring
 ============================
 
 >   Different between [serialx/hashring](https://github.com/serialx/hashring): 
->   1. Reset commit [7706f26](https://github.com/serialx/hashring/commit/7706f26af1941a4e865d509c4681eb86c3b62bf8) which brings [issues](https://github.com/serialx/hashring/issues/17).  
+>   1. Reset commit [7706f26](https://github.com/serialx/hashring/commit/7706f26af1941a4e865d509c4681eb86c3b62bf8) which brings [issue](https://github.com/serialx/hashring/issues/17).  
 >   2. Fix that node would not be inserted to ring when its weight is too small.
+>   3. Add `GetNodeFrom`
 
 Implements consistent hashing that can be used when
 the number of server nodes can increase or decrease (like in memcached).
@@ -46,6 +47,24 @@ serversInRing := []string{"192.168.0.246:11212",
 replicaCount := 3
 ring := hashring.New(serversInRing)
 server, _ := ring.GetNodes("my_key", replicaCount)
+```
+
+You can also get server from a list of servers.
+
+```go
+serversInRing := []string{"192.168.0.246:11212",
+                          "192.168.0.247:11212",
+                          "192.168.0.248:11212",
+                          "192.168.0.249:11212",
+                          "192.168.0.250:11212",
+                          "192.168.0.251:11212",
+                          "192.168.0.252:11212"}
+
+candidates := []string{"192.168.0.246:11212",
+                       "192.168.0.247:11212",
+                       "192.168.0.248:11212"}
+ring := hashring.New(serversInRing)
+server, _ := ring.GetNodeFrom("my_key", candidates)
 ```
 
 Using weights example ::
