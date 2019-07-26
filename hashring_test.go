@@ -2,7 +2,10 @@ package hashring
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func expectNode(t *testing.T, hashRing *HashRing, key string, expectedNode string) {
@@ -137,6 +140,15 @@ func TestNewWeighted(t *testing.T) {
 	expectNode(t, hashRing, "test5", "b")
 	expectNode(t, hashRing, "aaaa", "b")
 	expectNode(t, hashRing, "bbbb", "a")
+
+	expectNodes(t, hashRing, "test", []string{"b", "a"})
+}
+
+func TestNewUnbalancedWeighted(t *testing.T) {
+	weights := make(map[string]int)
+	weights["a"] = 1
+	weights["b"] = 80
+	hashRing := NewWithWeights(weights)
 
 	expectNodes(t, hashRing, "test", []string{"b", "a"})
 }
@@ -470,6 +482,67 @@ func TestAddRemoveNode(t *testing.T) {
 
 	expectNodesABC(t, hashRing)
 	expectNodeRangesABC(t, hashRing)
+}
+
+func TestGetNodefrom(t *testing.T) {
+	nodes := []string{"a", "b", "c"}
+	hashRing := New(nodes)
+
+	n, ok := hashRing.GetNodeFrom("test", []string{"a"})
+	assert.True(t, ok)
+	assert.Equal(t, "a", n)
+	n, ok = hashRing.GetNodeFrom("test", []string{"b"})
+	assert.True(t, ok)
+	assert.Equal(t, "b", n)
+	n, ok = hashRing.GetNodeFrom("test", []string{"b"})
+	assert.True(t, ok)
+	assert.Equal(t, "b", n)
+
+	n, ok = hashRing.GetNodeFrom("test", []string{"a", "b"})
+	assert.True(t, ok)
+	assert.Equal(t, "a", n)
+	n, ok = hashRing.GetNodeFrom("test1", []string{"a", "b"})
+	assert.True(t, ok)
+	assert.Equal(t, "b", n)
+	for i := 0; i < 99; i++ {
+		n, ok = hashRing.GetNodeFrom(strconv.Itoa(i), []string{"a", "b"})
+		assert.True(t, ok)
+		assert.NotEqual(t, "c", n)
+	}
+
+	n, ok = hashRing.GetNodeFrom("test", []string{"a", "b", "c"})
+	assert.True(t, ok)
+	assert.Equal(t, "a", n)
+	n, ok = hashRing.GetNodeFrom("test1", []string{"a", "b", "c"})
+	assert.True(t, ok)
+	assert.Equal(t, "b", n)
+	n, ok = hashRing.GetNodeFrom("testtt", []string{"a", "b", "c"})
+	assert.True(t, ok)
+	assert.Equal(t, "c", n)
+	n, ok = hashRing.GetNodeFrom("testtt", []string{"a"})
+	assert.True(t, ok)
+	assert.Equal(t, "a", n)
+}
+
+func TestHashDigest(t *testing.T) {
+	key := "whatever"
+	val := hashDigest(key)
+	for i := 0; i < 10; i++ {
+		newVal := hashDigest(key)
+		assert.True(t, sameBytes(val[:], newVal[:]), "hashDigest value inconsistent %v:%v", val, newVal)
+	}
+}
+
+func sameBytes(b1, b2 []byte) bool {
+	if len(b1) != len(b2) {
+		return false
+	}
+	for i := 0; i < len(b1); i++ {
+		if b1[i] != b2[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func BenchmarkHashes(b *testing.B) {
